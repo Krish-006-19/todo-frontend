@@ -1,8 +1,11 @@
-import { Link, NavLink, useLocation } from 'react-router-dom'
+import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext.jsx'
 
 export default function Navbar() {
 	const location = useLocation()
+	const navigate = useNavigate()
 	const isAuthPage = location.pathname === '/login' || location.pathname === '/signup'
+	const { isAuthenticated, logout } = useAuth()
 	
 	return (
 		<header className="glass-nav sticky top-0 z-20">
@@ -40,6 +43,14 @@ export default function Navbar() {
 									Dashboard
 								</div>
 							</NavLink>
+							{isAuthenticated && (
+							  <button
+								onClick={async () => { await logout(); navigate('/login', { replace: true }) }}
+								className="ml-2 px-4 py-2 rounded-xl font-medium transition-all duration-200 text-slate-600 hover:text-red-600 hover:bg-red-50"
+							  >
+								Logout
+							  </button>
+							)}
 						</nav>
 					)}
 

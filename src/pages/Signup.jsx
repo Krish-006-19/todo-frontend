@@ -1,6 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
-import axios from 'axios'
+import { useAuth } from '../context/AuthContext.jsx'
 
 export default function Signup() {
 	const [formData, setFormData] = useState({
@@ -13,6 +13,7 @@ export default function Signup() {
 	const [errors, setErrors] = useState({})
 	const [isLoading, setIsLoading] = useState(false)
 	const navigate = useNavigate()
+	const { signup } = useAuth()
 
 	const handleChange = (e) => {
 		const { name, value } = e.target
@@ -52,32 +53,25 @@ export default function Signup() {
 
 		setErrors(newErrors)
 		
-		if (Object.keys(newErrors).length === 0) {
-			setIsLoading(true)
-			  try {
-    const response = await axios.post(
-      "http://localhost:3000/register",
-      {
-		first_name: formData.firstName,
-		last_name: formData.lastName,
-		email: formData.email,
-		password: formData.password
-	  }, 
-      {
-        withCredentials: true
-      }
-    );
+				if (Object.keys(newErrors).length === 0) {
+						setIsLoading(true)
+						try {
+								const response = await signup({
+										first_name: formData.firstName,
+										last_name: formData.lastName,
+										email: formData.email,
+										password: formData.password,
+								})
 
-    if (response.status === 201) {
-      console.log("User registered!", response.data.user);
-      navigate("/login");
-    }
-  } catch (error) {
-    console.error(error.response?.data || error.message);
-  }finally {
-				setIsLoading(false)
-			}
-		}
+								if (response.status === 201 || response.status === 200) {
+										navigate('/login')
+								}
+						} catch (error) {
+								console.error(error.response?.data || error.message)
+						} finally {
+								setIsLoading(false)
+						}
+				}
 	}
 
 	return (

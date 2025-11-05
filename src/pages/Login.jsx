@@ -1,6 +1,6 @@
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
-import axios from 'axios'
+import { useAuth } from '../context/AuthContext.jsx'
 
 export default function Login() {
 	const [formData, setFormData] = useState({
@@ -10,6 +10,8 @@ export default function Login() {
 	const [errors, setErrors] = useState({})
 	const [isLoading, setIsLoading] = useState(false)
 	const navigate = useNavigate()
+	const location = useLocation()
+	const { login } = useAuth()
 
 	const handleChange = (e) => {
 		const { name, value } = e.target
@@ -40,32 +42,27 @@ export default function Login() {
 		
 		if (Object.keys(newErrors).length === 0) {
 			setIsLoading(true)
-		try {
-		setIsLoading(true)
-		const response = await axios.post(
-			'http://localhost:3000/login',
-			formData,
-			{ withCredentials: true }
-		)
-
-		if (response.status === 200) {
-			navigate('/dashboard')
-		}
-		} catch (error) {
-		if (error.response) {
-			if (error.response.status === 401) {
-			setErrors({ general: 'Invalid email or password' })
-			} else {
-			setErrors({ general: `User not found: ${error.response.status}` })
+			try {
+				const res = await login({ email: formData.email, password: formData.password })
+				if (res.status === 200) {
+					const redirectTo = location.state?.from?.pathname || '/dashboard'
+					navigate(redirectTo, { replace: true })
+				}
+			} catch (error) {
+				if (error.response) {
+					if (error.response.status === 401) {
+						setErrors({ general: 'Invalid email or password' })
+					} else {
+						setErrors({ general: error.response.data?.message || `Login failed (${error.response.status})` })
+					}
+				} else if (error.request) {
+					setErrors({ general: 'Cannot reach server. Please try again later.' })
+				} else {
+					setErrors({ general: 'Something went wrong.' })
+				}
+			} finally {
+				setIsLoading(false)
 			}
-		} else if (error.request) {
-			setErrors({ general: 'Cannot reach server. Please try again later.' })
-		} else {
-			setErrors({ general: 'Something went wrong.' })
-		}
-		} finally {
-		setIsLoading(false)
-		}
 		}
 	}
 
